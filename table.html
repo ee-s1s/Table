@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyFlow Blue Pro | 2026</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --accent: #22d3ee;
+            --bg: #030712;
+            --glass: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(30, 41, 59, 0.6);
+            --high: #ef4444;
+            --med: #f59e0b;
+            --low: #10b981;
+            --radius: 28px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        
+        body { 
+            background: radial-gradient(circle at top right, #0c4a6e 0%, #030712 100%); 
+            color: #f0f9ff; min-height: 100vh; padding: 15px; overflow-x: hidden;
+            display: flex; justify-content: center;
+        }
+
+        .wrapper { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* --- الألواح الزجاجية الموحدة --- */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (min-width: 768px) { .glass-panel { padding: 30px; } }
+
+        /* --- الساعة الرقمية --- */
+        .clock-header { text-align: center; padding: 15px; }
+        #live-clock { font-size: clamp(1.8rem, 5vw, 2.5rem); font-weight: 800; color: #fff; text-shadow: 0 0 20px rgba(14, 165, 233, 0.4); }
+        #live-date { font-size: 0.9rem; color: var(--accent); margin-bottom: 5px; opacity: 0.9; }
+
+        /* --- المؤقت الرئيسي --- */
+        .timer-hero { text-align: center; position: relative; }
+        .big-time {
+            font-size: clamp(3.5rem, 18vw, 10rem); font-weight: 800;
+            background: linear-gradient(to bottom, #fff 50%, var(--primary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            cursor: pointer; line-height: 1.1; margin: 10px 0;
+        }
+
+        /* وضع ملء الشاشة */
+        .timer-hero.fullscreen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            border-radius: 0; z-index: 2000; background: #000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px;
+        }
+        .exit-fs {
+            position: absolute; top: 20px; right: 20px;
+            display: none; background: rgba(255,255,255,0.1);
+            color: white; border: none; width: 50px; height: 50px;
+            border-radius: 50%; cursor: pointer; font-size: 1.5rem;
+            align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .timer-hero.fullscreen .exit-fs { display: flex; }
+
+        /* --- تحسين خانات إدخال الوقت --- */
+        .time-settings-row { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; }
+        @media (min-width: 600px) { .time-settings-row { grid-template-columns: 1fr 1fr; gap: 20px; } }
+
+        .time-input-box {
+            background: rgba(0,0,0,0.3); padding: 12px; border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+        .time-input-box h4 { font-size: 0.8rem; color: var(--primary); margin-bottom: 12px; font-weight: 800; }
+        .inputs-flex { display: flex; justify-content: center; gap: 6px; align-items: flex-start; }
+        .unit-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .unit-group input {
+            width: 42px; height: 42px; background: var(--card-bg); border: 1px solid var(--glass-border);
+            border-radius: 10px; color: white; text-align: center; font-size: 1rem; font-weight: bold; outline: none;
+        }
+        .unit-group label { font-size: 0.6rem; color: var(--accent); opacity: 0.7; font-weight: bold; }
+        .separator { margin-top: 8px; font-weight: bold; color: var(--primary); }
+
+        /* --- أزرار التحكم --- */
+        .controls { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
+        .btn {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        @media (min-width: 768px) { .btn { width: 60px; height: 60px; font-size: 1.4rem; } }
+        .btn-main { background: var(--primary); color: white; box-shadow: 0 10px 25px rgba(14, 165, 233, 0.4); }
+        .btn-side { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); }
+
+        /* --- نظام المهام --- */
+        .task-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-direction: column; }
+        @media (min-width: 600px) { .task-bar { flex-direction: row; flex-wrap: wrap; } }
+
+        .task-bar input[type="text"] { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 12px; border-radius: 15px; color: white; outline: none; font-size: 0.95rem; }
+        .task-bar select, .task-bar input[type="time"] { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 10px; border-radius: 15px; color: white; outline: none; cursor: pointer; }
+
+        .task-card {
+            background: var(--card-bg); border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 20px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-right: 5px solid #ccc; transition: 0.4s; gap: 10px;
+        }
+        .task-card.prio-high { border-right-color: var(--high); }
+        .task-card.prio-med { border-right-color: var(--med); }
+        .task-card.prio-low { border-right-color: var(--low); }
+        .task-card.completed { opacity: 0.4; filter: grayscale(1); }
+
+        /* مظهر التعديل */
+        .edit-mode-container { display: none; width: 100%; flex-direction: column; gap: 10px; animation: fadeIn 0.3s; }
+        .task-card.editing .task-content, .task-card.editing .task-actions { display: none; }
+        .task-card.editing .edit-mode-container { display: flex; }
+        .edit-inputs { display: flex; gap: 8px; flex-direction: column; }
+        @media (min-width: 600px) { .edit-inputs { flex-direction: row; } }
+        .edit-inputs input, .edit-inputs select { flex: 1; padding: 10px; border-radius: 10px; background: rgba(0,0,0,0.4); border: 1px solid var(--primary); color: white; font-size: 0.9rem; }
+
+        .task-actions { display: flex; gap: 6px; }
+        .action-btn { width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s; color: white; font-size: 0.9rem; }
+        .btn-done { background: rgba(16, 185, 129, 0.2); color: var(--low); }
+        .btn-edit { background: rgba(14, 165, 233, 0.2); color: var(--primary); }
+        .btn-delete { background: rgba(239, 68, 68, 0.2); color: var(--high); }
+
+        /* --- الفوتر --- */
+        .footer-pro { text-align: center; padding: 20px; }
+        .dev-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            padding: 8px 20px; border-radius: 50px; color: #000; font-weight: 800;
+            font-size: 0.9rem; text-decoration: none;
+        }
+        .social-box { display: flex; justify-content: center; gap: 20px; margin-top: 15px; }
+        .social-box a { color: white; font-size: 1.3rem; transition: 0.3s; opacity: 0.7; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <header class="glass-panel clock-header">
+        <div id="live-date">---</div>
+        <div id="live-clock">00:00:00</div>
+    </header>
+
+    <section class="glass-panel timer-hero" id="hero">
+        <button class="exit-fs" onclick="toggleFS()"><i class="fas fa-compress"></i></button>
+        <div class="big-time" id="timer" onclick="toggleFS()">00:25:00</div>
+        
+        <div class="controls">
+            <button class="btn btn-main" onclick="toggleTimer()" id="play-btn"><i class="fas fa-play"></i></button>
+            <button class="btn btn-side" onclick="resetTimer()"><i class="fas fa-redo-alt"></i></button>
+            <button class="btn btn-side" onclick="toggleFS()"><i class="fas fa-expand-arrows-alt"></i></button>
+        </div>
+
+        <div class="time-settings-row">
+            <div class="time-input-box">
+                <h4><i class="fas fa-brain"></i> جلسة التركيز</h4>
+                <div class="inputs-flex">
+                    <div class="unit-group"><input type="number" id="w-h" value="00" min="0"><label>ساعة</label></div>
+                    <span class="separator">:</span>
+                    <div class="unit-group"><input type="number" id="w-m" value="25" min="0"><label>دقيقة</label></div>
+                    <span class="separator">:</span>
+                    <div class="unit-group"><input type="number" id="w-s" value="00" min="0"><label>ثانية</label></div>
+                </div>
+            </div>
+            <div class="time-input-box">
+                <h4><i class="fas fa-mug-hot"></i> وقت الراحة</h4>
+                <div class="inputs-flex">
+                    <div class="unit-group"><input type="number" id="b-h" value="00" min="0"><label>ساعة</label></div>
+                    <span class="separator">:</span>
+                    <div class="unit-group"><input type="number" id="b-m" value="05" min="0"><label>دقيقة</label></div>
+                    <span class="separator">:</span>
+                    <div class="unit-group"><input type="number" id="b-s" value="00" min="0"><label>ثانية</label></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="glass-panel">
+        <div class="task-bar">
+            <input type="text" id="tName" placeholder="أضف مهمة جديدة...">
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <select id="tPrio" style="flex: 1;">
+                    <option value="high">عالي</option>
+                    <option value="med" selected>متوسط</option>
+                    <option value="low">منخفض</option>
+                </select>
+                <input type="time" id="tTime" style="flex: 1;">
+                <button class="btn-main" style="width:45px; height:45px; border-radius:12px; border:none; cursor:pointer;" onclick="addNewTask()">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div id="tList"></div>
+    </section>
+
+    <footer class="footer-pro">
+        <div class="dev-tag">
+            <i class="fas fa-terminal"></i>
+            Esmail Taha Faya
+        </div>
+        <div class="social-box">
+            <a href="https://instagram.com/ee_s1s" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="mailto:esmialtaha1100@gmail.com"><i class="far fa-envelope"></i></a>
+        </div>
+    </footer>
+</div>
+
+<audio id="beep" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+<script>
+    let timeLeft = 1500;
+    let timerIdx = null;
+    let isWork = true;
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('live-date').textContent = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
+        document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-GB', { hour12: false });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function getSeconds(type) {
+        const h = parseInt(document.getElementById(`${type}-h`).value) || 0;
+        const m = parseInt(document.getElementById(`${type}-m`).value) || 0;
+        const s = parseInt(document.getElementById(`${type}-s`).value) || 0;
+        return (h * 3600) + (m * 60) + s;
+    }
+
+    function updateUI() {
+        const h = Math.floor(timeLeft / 3600);
+        const m = Math.floor((timeLeft % 3600) / 60);
+        const s = timeLeft % 60;
+        document.getElementById('timer').textContent = 
+            `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    }
+
+    function toggleTimer() {
+        const btn = document.getElementById('play-btn');
+        if (timerIdx) {
+            clearInterval(timerIdx);
+            timerIdx = null;
+            btn.innerHTML = '<i class="fas fa-play"></i>';
+        } else {
+            btn.innerHTML = '<i class="fas fa-pause"></i>';
+            timerIdx = setInterval(() => {
+                if (timeLeft > 0) { timeLeft--; updateUI(); }
+                else {
+                    document.getElementById('beep').play();
+                    isWork = !isWork;
+                    timeLeft = getSeconds(isWork ? 'w' : 'b');
+                    updateUI();
+                }
+            }, 1000);
+        }
+    }
+
+    function resetTimer() {
+        clearInterval(timerIdx);
+        timerIdx = null;
+        isWork = true;
+        timeLeft = getSeconds('w');
+        document.getElementById('play-btn').innerHTML = '<i class="fas fa-play"></i>';
+        updateUI();
+    }
+
+    function toggleFS() { document.getElementById('hero').classList.toggle('fullscreen'); }
+
+    let tasks = JSON.parse(localStorage.getItem('study_tasks_v11')) || [];
+
+    function addNewTask() {
+        const name = document.getElementById('tName').value;
+        const prio = document.getElementById('tPrio').value;
+        const time = document.getElementById('tTime').value;
+        if (!name) return;
+        tasks.push({ id: Date.now(), name, prio, time, done: false });
+        document.getElementById('tName').value = '';
+        saveTasks();
+    }
+
+    function saveTasks() {
+        localStorage.setItem('study_tasks_v11', JSON.stringify(tasks));
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const list = document.getElementById('tList');
+        const prioMap = { high: 1, med: 2, low: 3 };
+        tasks.sort((a, b) => prioMap[a.prio] - prioMap[b.prio]);
+
+        list.innerHTML = tasks.map(t => `
+            <div class="task-card prio-${t.prio} ${t.done ? 'completed' : ''}" id="card-${t.id}">
+                <div class="task-content">
+                    <strong style="display:block; font-size:1rem;">${t.name}</strong>
+                    <small style="opacity:0.6;"><i class="far fa-clock"></i> ${t.time || 'لم يحدد'}</small>
+                </div>
+
+                <div class="edit-mode-container">
+                    <div class="edit-inputs">
+                        <input type="text" value="${t.name}" class="en-${t.id}">
+                        <input type="time" value="${t.time}" class="et-${t.id}">
+                        <select class="ep-${t.id}">
+                            <option value="high" ${t.prio==='high'?'selected':''}>عالي</option>
+                            <option value="med" ${t.prio==='med'?'selected':''}>متوسط</option>
+                            <option value="low" ${t.prio==='low'?'selected':''}>منخفض</option>
+                        </select>
+                    </div>
+                    <button class="btn-main" style="width:100%; height:35px; border-radius:10px; font-size:0.8rem; margin-top:5px;" onclick="saveEdit(${t.id})">حفظ</button>
+                </div>
+
+                <div class="task-actions">
+                    <button class="action-btn btn-done" onclick="toggleTask(${t.id})"><i class="fas fa-check"></i></button>
+                    <button class="action-btn btn-edit" onclick="enableEdit(${t.id})"><i class="fas fa-pen"></i></button>
+                    <button class="action-btn btn-delete" onclick="deleteTask(${t.id})"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function toggleTask(id) { const t = tasks.find(x => x.id === id); t.done = !t.done; saveTasks(); }
+    function deleteTask(id) { tasks = tasks.filter(x => x.id !== id); saveTasks(); }
+
+    function enableEdit(id) {
+        document.querySelectorAll('.task-card').forEach(c => c.classList.remove('editing'));
+        document.getElementById(`card-${id}`).classList.add('editing');
+    }
+
+    function saveEdit(id) {
+        const card = document.getElementById(`card-${id}`);
+        const t = tasks.find(x => x.id === id);
+        t.name = card.querySelector(`.en-${id}`).value;
+        t.time = card.querySelector(`.et-${id}`).value;
+        t.prio = card.querySelector(`.ep-${id}`).value;
+        saveTasks();
+    }
+
+    timeLeft = getSeconds('w');
+    updateUI();
+    renderTasks();
+</script>
+</body>
+</html>
